@@ -1,0 +1,13 @@
+import { Router, Request, Response, Application } from 'express';
+import { OK } from '../utils/statusCodes.util';
+const router: Router = Router();
+import CustomResponse from "../utils/helpers/response.util";
+
+/**API base route */
+router.get("/", (_req: Request, res: Response) => {
+    new CustomResponse(OK, true, "Welcome to web3-ussd-app API ensure to go through the API docs before using this service", res);
+});
+
+
+
+export default router;
