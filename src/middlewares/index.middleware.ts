@@ -5,7 +5,6 @@ import cors from "cors";
 import helmet from "helmet";
 import indexRoutes from "../routes/index.route";
 import { Logger } from "./logger.middleware";
-import { BASEPATH } from "../configs/constants.config";
 const logger = new Logger();
 
 export default (app: Application) => {
@@ -30,7 +29,6 @@ export default (app: Application) => {
   app.use(helmet());
 
   // Mounting routes
-  app.use(BASEPATH, logger.log, indexRoutes);
-
+  app.use(logger.log, indexRoutes);
 
 };
