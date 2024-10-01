@@ -9,7 +9,7 @@ export const PORT = process.env.PORT || 9871;
 export const JWT_SECRET = process.env.JWT_SECRET;
 export const BASEPATH = "/api/v1";
 export const DATABASES = {
-
+    USER: "User"
 };
 export const MAXAGE = 3 * 24 * 60 * 60;
 export const MESSAGES = {
