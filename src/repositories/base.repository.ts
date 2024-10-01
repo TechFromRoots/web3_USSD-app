@@ -1,4 +1,4 @@
-import mongoose, { Document, Model, ObjectId, QueryOptions } from "mongoose";
+import mongoose, { Document, Model, ObjectId, QueryOptions, UpdateQuery } from "mongoose";
 
 export default class BaseRepository<T extends Document> {
     private model: Model<T>;
@@ -23,7 +23,7 @@ export default class BaseRepository<T extends Document> {
         return await this.model.findById(id);
     }
 
-    async updateById(id: ObjectId, update: Partial<T>, options?: QueryOptions) {
+    async updateById(id: ObjectId, update: UpdateQuery<T>, options?: QueryOptions) {
         return await this.model.findByIdAndUpdate(id, update, { new: true, ...options });
     }
 
