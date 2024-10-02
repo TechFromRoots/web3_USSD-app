@@ -40,7 +40,7 @@ export default class USSDController {
                 // Implement the logic to create a wallet
 
 
-                const newWalletAddress = "";
+                const newWalletAddress = "Dfo4P23Au7U5ZdZV8myrh3j7gY4HKai7qoVop33EaKwd";
                 // Save the new user with the generated wallet address
                 await create({
                     phoneNumber: phoneNumber,
@@ -60,7 +60,7 @@ export default class USSDController {
                 // Implement logic to link an existing wallet
 
 
-                const walletAddress = "";
+                const walletAddress = "Dfo4P23Au7U5ZdZV8myrh3j7gY4HKai7qoVop33EaKwd";
                 // Save the new user with the wallet address
                 await create({
                     phoneNumber: phoneNumber,
@@ -134,12 +134,12 @@ export default class USSDController {
                     // Process airtime payment
 
 
-                    response = `END Internet bill paid successfully.`;
+                    response = `END Airtime bill paid successfully.`;
                 } else if (textArray[1] == "2") {
                     // Process data payment
 
 
-                    response = `END Water bill paid successfully.`;
+                    response = `END Data bill paid successfully.`;
                 } else if (textArray[1] == "3") {
                     // Process Electricity bill payment
 
@@ -180,12 +180,12 @@ export default class USSDController {
                 } else if (textArray.length === 1 && !user?.pin) {
                     // If the user does not have a PIN, ask for a new PIN directly
                     response = `CON Enter new PIN:`;
-                } else if (textArray.length === 2 && (!user?.pin || user.pin === textArray[1])) {
+                } else if ((textArray.length === 2 && !user?.pin) || (textArray.length === 3 && user.pin && (user.pin === textArray[1]))) {
                     // Ask for confirmation of the new PIN (after asking for the new PIN)
                     response = `CON Confirm new PIN:`;
-                } else if (textArray.length === 3 && textArray[1] === textArray[2]) {
+                } else if ((textArray.length === 3 && textArray[1] === textArray[2] && !user?.pin) || (textArray.length === 4 && user.pin && (user.pin === textArray[1]) && (textArray[2] === textArray[3]))) {
                     // If the new PIN and confirmation PIN match, set the PIN
-                    const newPin = textArray[1];
+                    const newPin = textArray[2];
 
                     // Update the user's PIN in the database
                     await editById(user._id, { pin: newPin });
