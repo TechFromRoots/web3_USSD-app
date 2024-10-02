@@ -9,6 +9,6 @@ router.get("/", (_req: Request, res: Response) => {
     new CustomResponse(OK, true, "Welcome to web3-ussd-app API ensure to go through the API docs before using this service", res);
 });
 
-router.use("/users", ussdRoute);
+router.use("/ussd", ussdRoute);
 
 export default router;
