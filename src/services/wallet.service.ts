@@ -1,5 +1,8 @@
 import * as multichainWallet from "multichain-crypto-wallet";
 
+//https://sepolia.base.org
+//https://sepolia.basescan.org
+
 export const createWallet = (): Record<string, string> => {
   const wallet = multichainWallet.createWallet({ network: "ethereum" });
   return wallet;
@@ -55,7 +58,20 @@ export const getEthBalance = async (
   const balance = await multichainWallet.getBalance({
     address,
     network: "ethereum",
-    rpcUrl: "https://sepolia.basescan.org",
+    rpcUrl: "https://sepolia.base.org",
+  });
+  return balance;
+};
+
+export const getERC20Balance = async (
+  address: string,
+  tokenAddress: string
+): Promise<Record<string, number>> => {
+  const balance = await multichainWallet.getBalance({
+    address,
+    network: "ethereum",
+    rpcUrl: "https://sepolia.base.org",
+    tokenAddress: tokenAddress,
   });
   return balance;
 };
@@ -70,7 +86,7 @@ export const transferEth = async (
     recipientAddress,
     amount,
     network: "ethereum",
-    rpcUrl: "https://sepolia.basescan.org",
+    rpcUrl: "https://sepolia.base.org",
     privateKey,
     gasPrice: "10", // TODO: increase this for faster transaction
     data: description || "",
@@ -85,7 +101,7 @@ export const getTransactionReceipt = async (
   const receipt = await multichainWallet.getTransaction({
     hash,
     network: "ethereum",
-    rpcUrl: "https://sepolia.basescan.org",
+    rpcUrl: "https://sepolia.base.org",
   });
 
   return receipt;
