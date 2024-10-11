@@ -50,7 +50,6 @@ export default class BillService {
       switch (carrier) {
         case "MTN NIGERIA":
           try {
-            console.log("here");
             const mtnAirtime = await axios.post(
               `https://api.flutterwave.com/v3/billers/BIL099/items/AT099/payment`,
               payLoad,
@@ -63,6 +62,7 @@ export default class BillService {
             console.log(mtnAirtime.data);
             return mtnAirtime.data.status;
           } catch (error) {
+            console.log(error);
             break;
           }
 

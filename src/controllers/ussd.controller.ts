@@ -16,6 +16,7 @@ import {
 import BillService from "../services/bill.service";
 import { determineInputType } from "../utils/walletRecoveryType.utiil";
 import { determineRecipientInputType } from "../utils/recipientInputType";
+import { P } from "pino";
 const { create, findOne, editById } = new UserService();
 const { getBillCategory, buyAirtime } = new BillService();
 
@@ -190,49 +191,67 @@ export default class USSDController {
               let transaction: any;
               switch (token) {
                 case "1":
-                  transaction = await transferEth(
-                    senderDetails.privateKey,
-                    recipientDetails.address,
-                    amount
-                  );
-                  console.log(transaction);
+                  try {
+                    transaction = await transferEth(
+                      senderDetails.privateKey,
+                      recipientDetails.address,
+                      amount
+                    );
+                    console.log(transaction);
 
-                  response = `END Token of ${amount} Eth sent successfully to ${recipient}.\nhash:${
-                    transaction.hash
-                  }\nstatus:${
-                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                  }`;
-                  break;
+                    const receipt = await transaction.wait();
+                    console.log(receipt);
+
+                    response = `END Token of ${amount} Eth sent successfully to ${recipient}.\nhash:${
+                      receipt.transactionHash
+                    }\nstatus:${
+                      receipt.status === 0 ? "Failed" : "Successful"
+                    }`;
+                    break;
+                  } catch (error) {
+                    throw new Error();
+                  }
 
                 case "2":
-                  transaction = await transferUSDC(
-                    senderDetails.privateKey,
-                    recipientDetails.address,
-                    amount
-                  );
-                  console.log(transaction);
+                  try {
+                    transaction = await transferUSDC(
+                      senderDetails.privateKey,
+                      recipientDetails.address,
+                      amount
+                    );
+                    console.log(transaction);
+                    const receipt = await transaction.wait();
+                    console.log(receipt);
 
-                  response = `END Token of ${amount} USDC sent successfully to ${recipient}.\nhash:${
-                    transaction.hash
-                  }\nstatus:${
-                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                  }`;
-                  break;
+                    response = `END Token of ${amount} USDC sent successfully to ${recipient}.\nhash:${
+                      receipt.transactionHash
+                    }\nstatus:${
+                      receipt.status === 0 ? "Failed" : "Successful"
+                    }`;
+                    break;
+                  } catch (error) {
+                    throw new Error();
+                  }
 
                 case "3":
-                  transaction = await transferDAI(
-                    senderDetails.privateKey,
-                    recipientDetails.address,
-                    amount
-                  );
-                  console.log(transaction);
-
-                  response = `END Token of ${amount} DAI sent successfully to ${recipient}.\nhash:${
-                    transaction.hash
-                  }\nstatus:${
-                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                  }`;
-                  break;
+                  try {
+                    transaction = await transferDAI(
+                      senderDetails.privateKey,
+                      recipientDetails.address,
+                      amount
+                    );
+                    console.log(transaction);
+                    const receipt = await transaction.wait();
+                    console.log(receipt);
+                    response = `END Token of ${amount} DAI sent successfully to ${recipient}.\nhash:${
+                      receipt.transactionHash
+                    }\nstatus:${
+                      receipt.status === 0 ? "Failed" : "Successful"
+                    }`;
+                    break;
+                  } catch (error) {
+                    throw new Error();
+                  }
 
                 default:
                   response = `END Token not sent, invalid token`;
@@ -308,56 +327,140 @@ export default class USSDController {
             const airtimeAmount = textArray[3];
             const token = textArray[4];
             const pin = textArray[5];
+            console.log(airtimeAmount, token, pin, user.phoneNumber);
 
             // decrypt wallet
             const userDetails = await decryptWallet(pin, user.walletDetails);
             let transaction: any;
+            let rateAmount: any;
             switch (token) {
               case "1":
-                transaction = await transferEth(
-                  userDetails.privateKey,
-                  process.env.ADMIN_WALLET!,
-                  Number(airtimeAmount) / Number(process.env.ETH_RATE!)
-                );
-                console.log(transaction);
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.ETH_RATE!)
+                  ).toFixed(18);
+                  transaction = await transferEth(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `0${user.phoneNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${
+                    user.phoneNumber
+                  } ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
 
-                response = `END Token of ${amount} Eth sent successfully to ${recipient}.\nhash:${
-                  transaction.hash
-                }\nstatus:${
-                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                }`;
-                break;
+              case "1":
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.ETH_RATE!)
+                  ).toFixed(18);
+                  transaction = await transferEth(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `0${user.phoneNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${
+                    user.phoneNumber
+                  } ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
 
               case "2":
-                transaction = await transferUSDC(
-                  userDetails.privateKey,
-                  recipientDetails.address,
-                  amount
-                );
-                console.log(transaction);
-
-                response = `END Token of ${amount} USDC sent successfully to ${recipient}.\nhash:${
-                  transaction.hash
-                }\nstatus:${
-                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                }`;
-                break;
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.USDC_RATE!)
+                  ).toFixed(6);
+                  transaction = await transferUSDC(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `0${user.phoneNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${
+                    user.phoneNumber
+                  } ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
 
               case "3":
-                transaction = await transferDAI(
-                  userDetails.privateKey,
-                  recipientDetails.address,
-                  amount
-                );
-                console.log(transaction);
-
-                response = `END Token of ${amount} DAI sent successfully to ${recipient}.\nhash:${
-                  transaction.hash
-                }\nstatus:${
-                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
-                }`;
-                break;
-
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.DAI_RATE!)
+                  ).toFixed(6);
+                  transaction = await transferDAI(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `0${user.phoneNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${
+                    user.phoneNumber
+                  } ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
               default:
                 response = `END Token not sent, invalid token`;
                 break;

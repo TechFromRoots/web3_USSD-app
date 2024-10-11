@@ -88,7 +88,7 @@ export const transferEth = async (
     network: "ethereum",
     rpcUrl: "https://sepolia.base.org",
     privateKey,
-    gasPrice: "10", // TODO: increase this for faster transaction
+    // gasPrice: "10", // TODO: increase this for faster transaction
     data: description || "",
   });
 
@@ -146,17 +146,3 @@ export const getTransactionReceipt = async (
 
   return receipt;
 };
-
-// Process self airtime payment
-// try {
-//   const airtime = await buyAirtime(`${user.phoneNumber}`, "1500");
-//   console.log(airtime);
-// } catch (error) {}
-
-// if (textArray[2] == "1") {
-//   const airtimeAmount = textArray[3];
-//   try {
-//     const airtime = await buyAirtime(`${user.phoneNumber}`, "1500");
-//     console.log(airtime);
-//   } catch (error) {}
-// }
