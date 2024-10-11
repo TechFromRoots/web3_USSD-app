@@ -22,14 +22,3 @@ export function determineInputType(input: string): string {
   // If it doesn't match either, return "Invalid Input"
   return "Invalid Input";
 }
-
-// Example Usage:
-const userInput1 =
-  "c873fea86c17fa8e298df716c59c1c64f5b2c64a1e5a3ff296db731bbf2cbf8d";
-const userInput2 =
-  "abandon ability able about above absent absorb abstract absurd abuse access accident";
-const userInput3 = "notAValidInput";
-
-console.log(determineInputType(userInput1)); // "Private Key"
-console.log(determineInputType(userInput2)); // "Seed Phrase"
-console.log(determineInputType(userInput3)); // "Invalid Input"

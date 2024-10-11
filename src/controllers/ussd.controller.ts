@@ -8,9 +8,14 @@ import {
   getEthBalance,
   getAddressFromPrivateKey,
   getWalletFromMnemonic,
+  decryptWallet,
+  transferEth,
+  transferUSDC,
+  transferDAI,
 } from "../services/wallet.service";
 import BillService from "../services/bill.service";
 import { determineInputType } from "../utils/walletRecoveryType.utiil";
+import { determineRecipientInputType } from "../utils/recipientInputType";
 const { create, findOne, editById } = new UserService();
 const { getBillCategory, buyAirtime } = new BillService();
 
@@ -123,18 +128,120 @@ export default class USSDController {
           // Ask for the recipient wallet address or phone number
           response = `CON Enter recipient wallet address or phone number:`;
         } else if (textArray.length === 2) {
-          // Ask for the amount of tokens to send
-          response = `CON Enter amount to send:`;
+          const EthBalance = await getEthBalance(user.address);
+          const USDCbalance = await getERC20Balance(
+            user.address,
+            "0x6E2c0695F1EC6eAC90C1C4A8bbaF6dD26651d2D1"
+          ); // change this address when moving to mainnet
+          const DAIbalance = await getERC20Balance(
+            user.address,
+            "0xAE7BD344982bD507D3dcAa828706D558cf281F13"
+          );
+
+          response = `CON select Token:
+            1. ETH: ${EthBalance.balance}
+            2. USDC: ${USDCbalance.balance}
+            3. DAI: ${DAIbalance.balance}`;
         } else if (textArray.length === 3) {
+          // Ask for the amount of tokens to send
+          const token = textArray[2];
+
+          switch (token) {
+            case "1":
+              response = `CON Enter amount of ETH to send:`;
+              break;
+
+            case "2":
+              response = `CON Enter amount of USDC to send:`;
+              break;
+
+            case "3":
+              response = `CON Enter amount of DAI to send:`;
+              break;
+
+            default:
+              break;
+          }
+        } else if (textArray.length === 4) {
+          response = `CON Enter your transaction pin`;
+        } else if (textArray.length === 5) {
           // Process the token sending
           const recipient = textArray[1];
-          const amount = textArray[2];
+          const token = textArray[2];
+          const amount = textArray[3];
+          const pin = textArray[4];
 
+          // decrypt wallet
+          const senderDetails = await decryptWallet(pin, user.walletDetails);
+          if (
+            !senderDetails.privateKey &&
+            senderDetails.address === user.address
+          ) {
+            response = `END Invalid transaction pin`;
+          }
           // Validate the recipient and amount
+          const recipientWalletType = determineRecipientInputType(recipient);
+          if (recipientWalletType === "Phone Number") {
+            const recipientDetails: IUser | null = await findOne({
+              phoneNumber: recipient,
+            });
+            if (recipientDetails?.address) {
+              // Logic to send tokens
+              let transaction: any;
+              switch (token) {
+                case "1":
+                  transaction = await transferEth(
+                    senderDetails.privateKey,
+                    recipientDetails.address,
+                    amount
+                  );
+                  console.log(transaction);
 
-          // Logic to send tokens
+                  response = `END Token of ${amount} Eth sent successfully to ${recipient}.\nhash:${
+                    transaction.hash
+                  }\nstatus:${
+                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                  }`;
+                  break;
 
-          response = `END Token of ${amount} sent successfully to ${recipient}.`;
+                case "2":
+                  transaction = await transferUSDC(
+                    senderDetails.privateKey,
+                    recipientDetails.address,
+                    amount
+                  );
+                  console.log(transaction);
+
+                  response = `END Token of ${amount} USDC sent successfully to ${recipient}.\nhash:${
+                    transaction.hash
+                  }\nstatus:${
+                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                  }`;
+                  break;
+
+                case "3":
+                  transaction = await transferDAI(
+                    senderDetails.privateKey,
+                    recipientDetails.address,
+                    amount
+                  );
+                  console.log(transaction);
+
+                  response = `END Token of ${amount} DAI sent successfully to ${recipient}.\nhash:${
+                    transaction.hash
+                  }\nstatus:${
+                    transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                  }`;
+                  break;
+
+                default:
+                  response = `END Token not sent, invalid token`;
+                  break;
+              }
+            }
+          }
+
+          // response = `END Token of ${amount} sent successfully to ${recipient}.`;
         }
       } else {
         response = `END You don't have a wallet linked.`;
@@ -175,13 +282,89 @@ export default class USSDController {
                     2. Data
                     3. Electricity`;
         } else if (textArray[1] == "1") {
-          // Process airtime payment
-          try {
-            const airtime = await buyAirtime("07064350087", "1500");
-            console.log(airtime);
-          } catch (error) {}
+          response = `CON for:
+                    1. Self
+                    2. Another number`;
+          if (textArray.length === 3) {
+            response = `CON Enter airtime amount:`;
+          } else if (textArray.length === 4) {
+            const EthBalance = await getEthBalance(user.address);
+            const USDCbalance = await getERC20Balance(
+              user.address,
+              "0x6E2c0695F1EC6eAC90C1C4A8bbaF6dD26651d2D1"
+            ); // change this address when moving to mainnet
+            const DAIbalance = await getERC20Balance(
+              user.address,
+              "0xAE7BD344982bD507D3dcAa828706D558cf281F13"
+            );
 
-          response = `END Airtime bill paid successfully.`;
+            response = `CON select Token:
+            1. ETH: ${EthBalance.balance}
+            2. USDC: ${USDCbalance.balance}
+            3. DAI: ${DAIbalance.balance}`;
+          } else if (textArray.length === 5) {
+            response = `CON Enter your transaction pin`;
+          } else if (textArray.length === 6) {
+            const airtimeAmount = textArray[3];
+            const token = textArray[4];
+            const pin = textArray[5];
+
+            // decrypt wallet
+            const userDetails = await decryptWallet(pin, user.walletDetails);
+            let transaction: any;
+            switch (token) {
+              case "1":
+                transaction = await transferEth(
+                  userDetails.privateKey,
+                  process.env.ADMIN_WALLET!,
+                  Number(airtimeAmount) / Number(process.env.ETH_RATE!)
+                );
+                console.log(transaction);
+
+                response = `END Token of ${amount} Eth sent successfully to ${recipient}.\nhash:${
+                  transaction.hash
+                }\nstatus:${
+                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                }`;
+                break;
+
+              case "2":
+                transaction = await transferUSDC(
+                  userDetails.privateKey,
+                  recipientDetails.address,
+                  amount
+                );
+                console.log(transaction);
+
+                response = `END Token of ${amount} USDC sent successfully to ${recipient}.\nhash:${
+                  transaction.hash
+                }\nstatus:${
+                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                }`;
+                break;
+
+              case "3":
+                transaction = await transferDAI(
+                  userDetails.privateKey,
+                  recipientDetails.address,
+                  amount
+                );
+                console.log(transaction);
+
+                response = `END Token of ${amount} DAI sent successfully to ${recipient}.\nhash:${
+                  transaction.hash
+                }\nstatus:${
+                  transaction.confirmations === 0 ? "Pending" : "Confirmed"
+                }`;
+                break;
+
+              default:
+                response = `END Token not sent, invalid token`;
+                break;
+            }
+          }
+
+          // response = `END Airtime bill paid successfully.`;
         } else if (textArray[1] == "2") {
           // Process data payment
 

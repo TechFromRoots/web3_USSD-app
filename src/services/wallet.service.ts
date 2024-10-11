@@ -95,6 +95,46 @@ export const transferEth = async (
   return transer;
 };
 
+export const transferUSDC = async (
+  privateKey: string,
+  recipientAddress: string,
+  amount: number,
+  description?: string
+): Promise<Record<any, unknown>> => {
+  const transer = await multichainWallet.transfer({
+    recipientAddress,
+    amount,
+    network: "ethereum",
+    rpcUrl: "https://sepolia.base.org",
+    privateKey,
+    gasPrice: "10", // TODO: increase this for faster transaction
+    tokenAddress: "0x6E2c0695F1EC6eAC90C1C4A8bbaF6dD26651d2D1",
+    data: description || "",
+  });
+
+  return transer;
+};
+
+export const transferDAI = async (
+  privateKey: string,
+  recipientAddress: string,
+  amount: number,
+  description?: string
+): Promise<Record<any, unknown>> => {
+  const transer = await multichainWallet.transfer({
+    recipientAddress,
+    amount,
+    network: "ethereum",
+    rpcUrl: "https://sepolia.base.org",
+    privateKey,
+    gasPrice: "10", // TODO: increase this for faster transaction
+    tokenAddress: "0xAE7BD344982bD507D3dcAa828706D558cf281F13",
+    data: description || "",
+  });
+
+  return transer;
+};
+
 export const getTransactionReceipt = async (
   hash: string
 ): Promise<Record<any, unknown>> => {
@@ -106,3 +146,17 @@ export const getTransactionReceipt = async (
 
   return receipt;
 };
+
+// Process self airtime payment
+// try {
+//   const airtime = await buyAirtime(`${user.phoneNumber}`, "1500");
+//   console.log(airtime);
+// } catch (error) {}
+
+// if (textArray[2] == "1") {
+//   const airtimeAmount = textArray[3];
+//   try {
+//     const airtime = await buyAirtime(`${user.phoneNumber}`, "1500");
+//     console.log(airtime);
+//   } catch (error) {}
+// }
