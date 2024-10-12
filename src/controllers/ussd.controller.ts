@@ -301,12 +301,12 @@ export default class USSDController {
                     2. Data
                     3. Electricity`;
         } else if (textArray[1] == "1") {
-          response = `CON for:
+          response = `CON Enter airtime amount:`;
+          if (textArray.length === 3) {
+            response = `CON for:
                     1. Self
                     2. Another number`;
-          if (textArray.length === 3) {
-            response = `CON Enter airtime amount:`;
-          } else if (textArray.length === 4) {
+          } else if (textArray.length === 4 && textArray[3] === "1") {
             const EthBalance = await getEthBalance(user.address);
             const USDCbalance = await getERC20Balance(
               user.address,
@@ -321,10 +321,27 @@ export default class USSDController {
             1. ETH: ${EthBalance.balance}
             2. USDC: ${USDCbalance.balance}
             3. DAI: ${DAIbalance.balance}`;
-          } else if (textArray.length === 5) {
+          } else if (textArray.length === 4 && textArray[3] === "2") {
+            response = `CON Enter Phone Number:`;
+          } else if (textArray.length === 5 && textArray[3] === "1") {
             response = `CON Enter your transaction pin`;
-          } else if (textArray.length === 6) {
-            const airtimeAmount = textArray[3];
+          } else if (textArray.length === 5 && textArray[3] === "2") {
+            const EthBalance = await getEthBalance(user.address);
+            const USDCbalance = await getERC20Balance(
+              user.address,
+              "0x6E2c0695F1EC6eAC90C1C4A8bbaF6dD26651d2D1"
+            ); // change this address when moving to mainnet
+            const DAIbalance = await getERC20Balance(
+              user.address,
+              "0xAE7BD344982bD507D3dcAa828706D558cf281F13"
+            );
+
+            response = `CON select Token:
+            1. ETH: ${EthBalance.balance}
+            2. USDC: ${USDCbalance.balance}
+            3. DAI: ${DAIbalance.balance}`;
+          } else if (textArray.length === 6 && textArray[3] === "1") {
+            const airtimeAmount = textArray[2];
             const token = textArray[4];
             const pin = textArray[5];
             console.log(airtimeAmount, token, pin, user.phoneNumber);
@@ -354,7 +371,7 @@ export default class USSDController {
                     `${airtimeAmount}`
                   );
                   console.log(airtime);
-                  response = `END Airtime purchase of ${airtimeAmount} for ${
+                  response = `END Airtime purchase of ${airtimeAmount} for 0${
                     user.phoneNumber
                   } ${
                     airtime === "success"
@@ -453,6 +470,143 @@ export default class USSDController {
                   response = `END Airtime purchase of ${airtimeAmount} for ${
                     user.phoneNumber
                   } ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
+              default:
+                response = `END Token not sent, invalid token`;
+                break;
+            }
+          } else if (textArray.length === 6 && textArray[3] === "2") {
+            response = `CON Enter your transaction pin`;
+          } else if (textArray.length === 7 && textArray[3] === "2") {
+            const airtimeAmount = textArray[2];
+            const token = textArray[5];
+            const pin = textArray[6];
+            const recipientNumber = textArray[4];
+            console.log(airtimeAmount, token, pin, recipientNumber);
+
+            // decrypt wallet
+            const userDetails = await decryptWallet(pin, user.walletDetails);
+            let transaction: any;
+            let rateAmount: any;
+            switch (token) {
+              case "1":
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.ETH_RATE!)
+                  ).toFixed(18);
+                  transaction = await transferEth(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `${recipientNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${recipientNumber} ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
+
+              case "1":
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.ETH_RATE!)
+                  ).toFixed(18);
+                  transaction = await transferEth(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `${recipientNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${recipientNumber} ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
+
+              case "2":
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.USDC_RATE!)
+                  ).toFixed(6);
+                  transaction = await transferUSDC(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `${recipientNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${recipientNumber} ${
+                    airtime === "success"
+                      ? "was successful"
+                      : "is been proccessed"
+                  }.\nhash:${receipt.transactionHash}`;
+                  break;
+                } catch (error) {
+                  console.log(error);
+                }
+
+              case "3":
+                try {
+                  rateAmount = (
+                    Number(airtimeAmount) / Number(process.env.DAI_RATE!)
+                  ).toFixed(6);
+                  transaction = await transferDAI(
+                    userDetails.privateKey,
+                    process.env.ADMIN_WALLET!,
+                    +rateAmount
+                  );
+                  const receipt = await transaction.wait();
+                  if (receipt.status == 0) {
+                    response = `END Transaction failed`;
+                    break;
+                  }
+                  const airtime = await buyAirtime(
+                    `${recipientNumber}`,
+                    `${airtimeAmount}`
+                  );
+                  console.log(airtime);
+                  response = `END Airtime purchase of ${airtimeAmount} for ${recipientNumber} ${
                     airtime === "success"
                       ? "was successful"
                       : "is been proccessed"
