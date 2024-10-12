@@ -16,7 +16,6 @@ import {
 import BillService from "../services/bill.service";
 import { determineInputType } from "../utils/walletRecoveryType.utiil";
 import { determineRecipientInputType } from "../utils/recipientInputType";
-import { P } from "pino";
 const { create, findOne, editById } = new UserService();
 const { getBillCategory, buyAirtime } = new BillService();
 
