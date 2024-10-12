@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "npm install && tsc",
     "dev": "nodemon ./src/server.ts",
-    "start": "build/app.js",
+    "build": "npm install && tsc",
+    "start": "ts-node ./src/server.ts",
     "test": "jest"
   },
   "keywords": [],
